@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import base64
 from dataclasses import dataclass
 from typing import Protocol
 from urllib.parse import urlparse
@@ -13,6 +14,7 @@ class EncodeError(ValueError):
 class QRRequestData:
     qr_type: str
     data: str | None = None
+    data_b64: str | None = None
     url: str | None = None
 
     # wifi
@@ -28,9 +30,6 @@ class QREncoder(Protocol):
 
 
 def escape_wifi_value(value: str) -> str:
-    """
-    WIFI QR 포맷에서 특수문자를 escape 합니다.
-    """
     return (
         value.replace("\\", "\\\\")
         .replace(";", r"\;")
@@ -56,25 +55,45 @@ def normalize_url(raw_url: str) -> str:
     return raw_url
 
 
+def decode_base64url(value: str) -> str:
+    try:
+        padded = value + "=" * (-len(value) % 4)
+        decoded = base64.urlsafe_b64decode(padded.encode("utf-8"))
+        return decoded.decode("utf-8")
+    except Exception as exc:
+        raise EncodeError("invalid data_b64") from exc
+
+
 class RawEncoder:
     def encode(self, req: QRRequestData) -> str:
+        if req.data_b64:
+            decoded = decode_base64url(req.data_b64)
+            if not decoded.strip():
+                raise EncodeError("decoded data_b64 is empty")
+            return decoded
+
         if not req.data or not req.data.strip():
             raise EncodeError("data is empty")
+
         return req.data.strip()
 
 
 class UrlEncoder:
     def encode(self, req: QRRequestData) -> str:
-        if not req.url:
-            raise EncodeError("url is required for type=url")
-        return normalize_url(req.url)
+        if req.data_b64:
+            decoded = decode_base64url(req.data_b64)
+            return normalize_url(decoded)
+
+        if req.url:
+            return normalize_url(req.url)
+
+        if req.data:
+            return normalize_url(req.data)
+
+        raise EncodeError("url or data is required for type=url")
 
 
 class WifiEncoder:
-    """
-    표준적인 Wi-Fi QR 문자열:
-    WIFI:T:WPA;S:MySSID;P:mypassword;H:false;;
-    """
     ALLOWED = {"WPA", "WEP", "nopass"}
 
     def encode(self, req: QRRequestData) -> str:
@@ -116,4 +135,3 @@ def encode_qr_payload(req: QRRequestData) -> str:
         )
 
     return encoder.encode(req)
-

@@ -12,7 +12,11 @@ class RenderError(ValueError):
     pass
 
 
-def build_qr_matrix(data: str, border: int = 4, error_correction: str = "M") -> List[List[bool]]:
+def build_qr_matrix(
+    data: str,
+    border: int = 4,
+    error_correction: str = "M",
+) -> tuple[list[list[bool]], int]:
     ec_map = {
         "L": qrcode.constants.ERROR_CORRECT_L,
         "M": qrcode.constants.ERROR_CORRECT_M,
@@ -33,18 +37,22 @@ def build_qr_matrix(data: str, border: int = 4, error_correction: str = "M") -> 
     qr.add_data(data)
     qr.make(fit=True)
 
-    return qr.get_matrix()
+    return qr.get_matrix(), qr.version
 
 
 def is_in_finder_zone(row: int, col: int, n: int, border: int) -> bool:
+    """
+    Finder pattern(좌상, 우상, 좌하) 영역과 그 주변 1칸까지 제외합니다.
+    dot 렌더링 시 finder를 따로 예쁘게 그리기 위해 사용합니다.
+    """
     top = border
     left = border
     size = 7
 
     zones = [
-        (top - 1, left - 1),
-        (top - 1, n - border - size),
-        (n - border - size, left - 1),
+        (top - 1, left - 1),           # top-left
+        (top - 1, n - border - size), # top-right
+        (n - border - size, left - 1) # bottom-left
     ]
 
     for zr, zc in zones:
@@ -54,11 +62,12 @@ def is_in_finder_zone(row: int, col: int, n: int, border: int) -> bool:
 
 
 def svg_header(total_px: int, background: str) -> str:
+    bg = html.escape(background)
     return (
         f'<svg xmlns="http://www.w3.org/2000/svg" '
         f'width="{total_px}" height="{total_px}" '
         f'viewBox="0 0 {total_px} {total_px}" fill="none">'
-        f'<rect width="{total_px}" height="{total_px}" fill="{html.escape(background)}"/>'
+        f'<rect width="{total_px}" height="{total_px}" fill="{bg}"/>'
     )
 
 
@@ -73,8 +82,15 @@ def draw_dot_modules(
     color: str,
     border: int,
 ) -> None:
+    """
+    원형 dot 스타일 렌더링.
+    연결 바 없이 각 모듈을 독립적인 circle로 그립니다.
+    """
+    fill = html.escape(color)
     n = len(matrix)
-    radius = scale * 0.34
+
+    # 원 크기를 조금 키워서 더 촘촘하고 qr.io 느낌에 가깝게
+    radius = scale * 0.5
 
     for r in range(n):
         for c in range(n):
@@ -85,8 +101,9 @@ def draw_dot_modules(
 
             cx = c * scale + scale / 2
             cy = r * scale + scale / 2
+
             out.write(
-                f'<circle cx="{cx:.2f}" cy="{cy:.2f}" r="{radius:.2f}" fill="{html.escape(color)}"/>'
+                f'<circle cx="{cx:.2f}" cy="{cy:.2f}" r="{radius:.2f}" fill="{fill}"/>'
             )
 
 
@@ -103,9 +120,13 @@ def draw_square_modules(
         for c in range(n):
             if not matrix[r][c]:
                 continue
+
             x = c * scale
             y = r * scale
-            out.write(f'<rect x="{x}" y="{y}" width="{scale}" height="{scale}" fill="{fill}"/>')
+
+            out.write(
+                f'<rect x="{x}" y="{y}" width="{scale}" height="{scale}" fill="{fill}"/>'
+            )
 
 
 def draw_finder(
@@ -116,6 +137,9 @@ def draw_finder(
     color: str,
     background: str,
 ) -> None:
+    """
+    qr.io 느낌의 둥근 finder pattern
+    """
     fill = html.escape(color)
     bg = html.escape(background)
 
@@ -124,13 +148,16 @@ def draw_finder(
     inner = 3 * scale
 
     out.write(
-        f'<rect x="{x}" y="{y}" width="{outer}" height="{outer}" rx="{scale * 1.6:.2f}" fill="{fill}"/>'
+        f'<rect x="{x}" y="{y}" width="{outer}" height="{outer}" '
+        f'rx="{scale * 1.55:.2f}" fill="{fill}"/>'
     )
     out.write(
-        f'<rect x="{x + scale}" y="{y + scale}" width="{middle}" height="{middle}" rx="{scale * 1.2:.2f}" fill="{bg}"/>'
+        f'<rect x="{x + scale}" y="{y + scale}" width="{middle}" height="{middle}" '
+        f'rx="{scale * 1.10:.2f}" fill="{bg}"/>'
     )
     out.write(
-        f'<rect x="{x + 2 * scale}" y="{y + 2 * scale}" width="{inner}" height="{inner}" rx="{scale * 0.8:.2f}" fill="{fill}"/>'
+        f'<rect x="{x + 2 * scale}" y="{y + 2 * scale}" width="{inner}" height="{inner}" '
+        f'rx="{scale * 0.72:.2f}" fill="{fill}"/>'
     )
 
 
@@ -157,7 +184,7 @@ def draw_all_finders(
 def matrix_to_svg(
     matrix: List[List[bool]],
     style: str = "dot",
-    scale: int = 16,
+    scale: int = 10,
     color: str = "#000000",
     background: str = "#ffffff",
     border: int = 4,
@@ -186,4 +213,3 @@ def svg_to_png_bytes(svg: str) -> bytes:
     buffer = BytesIO()
     cairosvg.svg2png(bytestring=svg.encode("utf-8"), write_to=buffer)
     return buffer.getvalue()
-
