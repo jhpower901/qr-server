@@ -5,312 +5,485 @@
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>QR Server UI</title>
   <style>
-  :root {
-    --bg: #0b0d10;
-    --panel: #151922;
-    --panel-2: #1c2230;
-    --text: #eef2f7;
-    --muted: #aab4c3;
-    --line: #2a3242;
-    --accent: #6aa9ff;
-    --accent-2: #8cbcff;
-  }
+    :root {
+      --bg: #0b0d10;
+      --panel: #151922;
+      --panel-2: #1c2230;
+      --panel-3: #222b3d;
+      --text: #eef2f7;
+      --muted: #aab4c3;
+      --line: #2a3242;
+      --accent: #6aa9ff;
+      --accent-2: #8cbcff;
+      --danger: #ff8c8c;
+    }
 
-  * { box-sizing: border-box; }
+    * { box-sizing: border-box; }
 
-  body {
-    margin: 0;
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Noto Sans KR", sans-serif;
-    background: var(--bg);
-    color: var(--text);
-  }
+    body {
+      margin: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Noto Sans KR", sans-serif;
+      background: var(--bg);
+      color: var(--text);
+    }
 
-  .wrap {
-    max-width: 1180px;
-    margin: 0 auto;
-    padding: 24px;
-  }
+    .wrap {
+      max-width: 1240px;
+      margin: 0 auto;
+      padding: 24px;
+    }
 
-  h1 {
-    margin: 0 0 8px;
-    font-size: 28px;
-  }
+    h1 {
+      margin: 0 0 8px;
+      font-size: 28px;
+    }
 
-  .sub {
-    margin: 0 0 24px;
-    color: var(--muted);
-  }
+    .sub {
+      margin: 0 0 24px;
+      color: var(--muted);
+      line-height: 1.5;
+    }
 
-  .grid {
-    display: grid;
-    grid-template-columns: 420px 1fr;
-    gap: 20px;
-  }
-
-  .card {
-    background: var(--panel);
-    border: 1px solid var(--line);
-    border-radius: 16px;
-    padding: 18px;
-  }
-
-  .card h2 {
-    margin: 0 0 14px;
-    font-size: 18px;
-  }
-
-  .row {
-    display: grid;
-    gap: 8px;
-    margin-bottom: 14px;
-  }
-
-  .row.inline-2 {
-    grid-template-columns: 1fr 1fr;
-    gap: 10px;
-  }
-
-  .row.inline-3 {
-    grid-template-columns: 1fr 1fr 1fr;
-    gap: 10px;
-  }
-
-  label {
-    font-size: 13px;
-    color: var(--muted);
-  }
-
-  input,
-  select,
-  textarea,
-  button {
-    width: 100%;
-    border-radius: 10px;
-    border: 1px solid var(--line);
-    background: var(--panel-2);
-    color: var(--text);
-    padding: 10px 12px;
-    font-size: 14px;
-    outline: none;
-    appearance: none;
-    -webkit-appearance: none;
-    transition: border-color 0.15s ease, box-shadow 0.15s ease, background 0.15s ease;
-  }
-
-  input:focus,
-  select:focus,
-  textarea:focus {
-    border-color: var(--accent);
-    box-shadow: 0 0 0 3px rgba(106, 169, 255, 0.18);
-    background: #20283a;
-  }
-
-  textarea {
-    resize: vertical;
-    min-height: 96px;
-  }
-
-  input[type="checkbox"] {
-    width: auto;
-    transform: scale(1.1);
-    accent-color: var(--accent);
-    appearance: auto;
-    -webkit-appearance: checkbox;
-  }
-
-  .check {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    min-height: 42px;
-    padding: 0 4px;
-  }
-
-  .actions {
-    display: grid;
-    grid-template-columns: 1fr 1fr 1fr;
-    gap: 10px;
-    margin-top: 8px;
-  }
-
-  button {
-    cursor: pointer;
-    font-weight: 600;
-  }
-
-  button:hover {
-    border-color: #41506d;
-    background: #232c3f;
-  }
-
-  button.primary {
-    background: var(--accent);
-    color: #08111f;
-    border: 0;
-  }
-
-  button.primary:hover {
-    background: var(--accent-2);
-  }
-
-  .preview-wrap {
-    display: grid;
-    gap: 14px;
-  }
-
-  .preview-box {
-    min-height: 520px;
-    display: grid;
-    place-items: center;
-    border: 1px dashed var(--line);
-    border-radius: 16px;
-    background:
-      linear-gradient(45deg, #111 25%, transparent 25%) -10px 0/20px 20px,
-      linear-gradient(-45deg, #111 25%, transparent 25%) -10px 0/20px 20px,
-      linear-gradient(45deg, transparent 75%, #111 75%) -10px 0/20px 20px,
-      linear-gradient(-45deg, transparent 75%, #111 75%) -10px 0/20px 20px,
-      #0f1218;
-    overflow: hidden;
-  }
-
-  .preview-box img {
-    max-width: 100%;
-    max-height: 76vh;
-    display: block;
-  }
-
-  .hint,
-  .error,
-  .small {
-    font-size: 13px;
-    color: var(--muted);
-  }
-
-  .error {
-    color: #ff8c8c;
-    white-space: pre-wrap;
-  }
-
-  .hidden {
-    display: none;
-  }
-
-  /* 숫자 input 스피너 색/모양 이슈 줄이기 */
-  input[type="number"]::-webkit-outer-spin-button,
-  input[type="number"]::-webkit-inner-spin-button {
-    -webkit-appearance: none;
-    margin: 0;
-  }
-
-  input[type="number"] {
-    -moz-appearance: textfield;
-    appearance: textfield;
-  }
-
-  /* select 화살표 커스텀 */
-  select {
-    background-image:
-      linear-gradient(45deg, transparent 50%, #9fb2d1 50%),
-      linear-gradient(135deg, #9fb2d1 50%, transparent 50%);
-    background-position:
-      calc(100% - 18px) calc(50% - 3px),
-      calc(100% - 12px) calc(50% - 3px);
-    background-size: 6px 6px, 6px 6px;
-    background-repeat: no-repeat;
-    padding-right: 34px;
-  }
-
-  .color-presets {
-    display: grid;
-    grid-template-columns: repeat(4, 1fr);
-    gap: 8px;
-    margin-top: 6px;
-  }
-
-  .preset-btn {
-    height: 36px;
-    border-radius: 10px;
-    border: 1px solid var(--line);
-    cursor: pointer;
-    background: var(--panel-2);
-  }
-
-  .meta {
-    display: flex;
-    justify-content: space-between;
-    gap: 12px;
-    flex-wrap: wrap;
-    color: var(--muted);
-    font-size: 12px;
-  }
-
-  @media (max-width: 980px) {
     .grid {
-      grid-template-columns: 1fr;
+      display: grid;
+      grid-template-columns: 460px 1fr;
+      gap: 20px;
+    }
+
+    .card {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      padding: 18px;
+    }
+
+    .card h2 {
+      margin: 0 0 14px;
+      font-size: 18px;
+    }
+
+    .row {
+      display: grid;
+      gap: 8px;
+      margin-bottom: 14px;
+    }
+
+    .row.inline-2 {
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
+
+    .row.inline-3 {
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 10px;
+    }
+
+    label {
+      font-size: 13px;
+      font-weight: 600;
+      color: #d7e0ec;
+      letter-spacing: 0.01em;
+    }
+
+    input,
+    select,
+    textarea,
+    button {
+      width: 100%;
+      border-radius: 10px;
+      border: 1px solid var(--line);
+      background: var(--panel-2);
+      color: var(--text);
+      padding: 10px 12px;
+      font-size: 14px;
+      outline: none;
+      transition: border-color 0.15s ease, box-shadow 0.15s ease, background 0.15s ease;
+    }
+
+    input:focus,
+    select:focus,
+    textarea:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px rgba(106, 169, 255, 0.18);
+      background: #20283a;
+    }
+
+    textarea {
+      resize: vertical;
+      min-height: 96px;
+    }
+
+    /* 기본 숫자 스피너 제거 후 커스텀 UI 사용 */
+    input[type="number"]::-webkit-outer-spin-button,
+    input[type="number"]::-webkit-inner-spin-button {
+      -webkit-appearance: none;
+      margin: 0;
+    }
+
+    input[type="number"] {
+      appearance: textfield;
+      -moz-appearance: textfield;
+      text-align: center;
+      padding: 10px 8px;
+    }
+
+    input[type="checkbox"] {
+      width: auto;
+      transform: scale(1.1);
+      accent-color: var(--accent);
+    }
+
+    .check {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      min-height: 42px;
+      padding: 0 4px;
+    }
+
+    .actions {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 10px;
+      margin-top: 8px;
+    }
+
+    button {
+      cursor: pointer;
+      font-weight: 600;
+    }
+
+    button:hover {
+      border-color: #41506d;
+      background: #232c3f;
+    }
+
+    button.primary {
+      background: var(--accent);
+      color: #08111f;
+      border: 0;
+    }
+
+    button.primary:hover {
+      background: var(--accent-2);
+    }
+
+    .preview-wrap {
+      display: grid;
+      gap: 14px;
+    }
+
+    .preview-meta {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: flex-start;
+      gap: 10px;
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .chip {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      align-self: flex-start;
+      width: fit-content;
+      max-width: 100%;
+      min-height: 34px;
+      background: #1d2534;
+      border: 1px solid #33405a;
+      border-radius: 999px;
+      padding: 0 12px;
+      white-space: nowrap;
     }
 
     .preview-box {
-      min-height: 360px;
+      min-height: 520px;
+      display: grid;
+      place-items: center;
+      border: 1px dashed var(--line);
+      border-radius: 16px;
+      background:
+        linear-gradient(45deg, #111 25%, transparent 25%) -10px 0/20px 20px,
+        linear-gradient(-45deg, #111 25%, transparent 25%) -10px 0/20px 20px,
+        linear-gradient(45deg, transparent 75%, #111 75%) -10px 0/20px 20px,
+        linear-gradient(-45deg, transparent 75%, #111 75%) -10px 0/20px 20px,
+        #0f1218;
+      overflow: hidden;
     }
-  }
-</style>
+
+    .preview-box img {
+      max-width: 100%;
+      max-height: 76vh;
+      display: block;
+    }
+
+    .hint,
+    .small {
+      font-size: 13px;
+      color: var(--muted);
+      line-height: 1.45;
+    }
+
+    .error {
+      font-size: 13px;
+      color: var(--danger);
+      white-space: pre-wrap;
+      line-height: 1.45;
+    }
+
+    .hidden {
+      display: none !important;
+    }
+
+    .type-panels {
+      margin-top: 10px;
+    }
+
+    .panel-block {
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      padding: 12px;
+      background: rgba(255,255,255,0.02);
+    }
+
+    .section-title {
+      font-size: 13px;
+      font-weight: 700;
+      margin: 0 0 10px;
+      color: #d8e2f0;
+    }
+
+    .color-presets {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 8px;
+      margin-top: 6px;
+    }
+
+    .preset-btn {
+      height: 36px;
+      border-radius: 10px;
+      border: 1px solid var(--line);
+      cursor: pointer;
+      padding: 0;
+      overflow: hidden;
+    }
+
+    .preset-btn:hover {
+      transform: translateY(-1px);
+    }
+
+    .divider {
+      height: 1px;
+      background: var(--line);
+      margin: 16px 0;
+    }
+
+    .number-field {
+      display: grid;
+      grid-template-columns: 32px minmax(0, 1fr) 32px;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .number-field input {
+      height: 42px;
+      border-radius: 10px;
+      background: var(--panel-2);
+      border: 1px solid var(--line);
+    }
+
+    .spin-btn {
+      width: 32px;
+      min-width: 32px;
+      height: 32px;
+      border-radius: 9px;
+      border: 1px solid #3a4863;
+      background: #263046;
+      color: var(--text);
+      padding: 0;
+      font-size: 17px;
+      line-height: 1;
+      display: inline-grid;
+      place-items: center;
+      justify-self: center;
+      align-self: center;
+    }
+
+    .spin-btn:hover {
+      background: #30405f;
+      border-color: #5470a3;
+    }
+
+    select {
+      padding-right: 34px;
+      background-image:
+        linear-gradient(45deg, transparent 50%, #9fb2d1 50%),
+        linear-gradient(135deg, #9fb2d1 50%, transparent 50%);
+      background-position:
+        calc(100% - 18px) calc(50% - 3px),
+        calc(100% - 12px) calc(50% - 3px);
+      background-size: 6px 6px, 6px 6px;
+      background-repeat: no-repeat;
+    }
+
+    .number-field input {
+      min-width: 0;
+    }
+
+    @media (min-width: 981px) {
+      .preview-meta {
+        gap: 12px;
+      }
+    }
+
+    @media (max-width: 980px) {
+      .grid {
+        grid-template-columns: 1fr;
+      }
+
+      .preview-box {
+        min-height: 360px;
+      }
+
+      .chip {
+        white-space: normal;
+      }
+    }
+  </style>
 </head>
 <body>
   <div class="wrap">
     <h1>QR Server UI</h1>
-    <p class="sub">텍스트 / URL / Wi-Fi QR을 생성하고 PNG / JPG / SVG로 내려받을 수 있습니다.</p>
+    <p class="sub">
+      텍스트, URL, Wi-Fi, Email, Phone, SMS, vCard QR을 생성할 수 있습니다.
+      <br />
+      UI 필드명과 API 필드명이 동일합니다.
+    </p>
 
     <div class="grid">
       <div class="card">
         <h2>옵션</h2>
 
         <div class="row">
-          <label for="type">Type</label>
-          <select id="type">
-            <option value="text">text</option>
-            <option value="url">url</option>
-            <option value="wifi">wifi</option>
+          <label for="qr_type">QR Type</label>
+          <select id="qr_type">
+            <option value="text">Text</option>
+            <option value="url">URL</option>
+            <option value="wifi">Wi-Fi</option>
+            <option value="email">Email</option>
+            <option value="phone">Phone</option>
+            <option value="sms">SMS</option>
+            <option value="vcard">vCard</option>
           </select>
         </div>
 
-        <div id="section-text-url">
-          <div class="row" id="row-data">
-            <label for="data">Data / Text</label>
-            <textarea id="data" placeholder="예: 안녕하세요 / vless://... / 기타 텍스트"></textarea>
+        <div class="type-panels">
+          <div id="panel-text" class="panel-block">
+            <div class="section-title">Text</div>
+            <div class="row">
+              <label for="text_value">Text</label>
+              <textarea id="text_value" placeholder="임의 문자열을 입력하세요"></textarea>
+            </div>
+            <div class="row">
+              <label for="text_b64">Text Base64URL (선택)</label>
+              <input id="text_b64" placeholder="선택 사항" />
+            </div>
           </div>
 
-          <div class="row hidden" id="row-url">
-            <label for="url">URL</label>
-            <input id="url" placeholder="예: www.naver.com" />
+          <div id="panel-url" class="panel-block hidden">
+            <div class="section-title">URL</div>
+            <div class="row">
+              <label for="url_value">URL</label>
+              <input id="url_value" placeholder="예: www.naver.com" />
+            </div>
+            <div class="row">
+              <label for="url_b64">URL Base64URL (선택)</label>
+              <input id="url_b64" placeholder="선택 사항" />
+            </div>
+          </div>
+
+          <div id="panel-wifi" class="panel-block hidden">
+            <div class="section-title">Wi-Fi</div>
+            <div class="row">
+              <label for="wifi_ssid">SSID</label>
+              <input id="wifi_ssid" placeholder="Wi-Fi 이름" />
+            </div>
+            <div class="row">
+              <label for="wifi_password">Password</label>
+              <input id="wifi_password" placeholder="Wi-Fi 비밀번호" />
+            </div>
+            <div class="row inline-2">
+              <div>
+                <label for="wifi_encryption">Encryption</label>
+                <select id="wifi_encryption">
+                  <option value="WPA">WPA</option>
+                  <option value="WEP">WEP</option>
+                  <option value="nopass">nopass</option>
+                </select>
+              </div>
+              <div class="check">
+                <input id="wifi_hidden" type="checkbox" />
+                <label for="wifi_hidden">숨김 SSID</label>
+              </div>
+            </div>
+          </div>
+
+          <div id="panel-email" class="panel-block hidden">
+            <div class="section-title">Email</div>
+            <div class="row">
+              <label for="email_address">Email Address</label>
+              <input id="email_address" placeholder="예: test@example.com" />
+            </div>
+            <div class="row">
+              <label for="email_subject">Subject</label>
+              <input id="email_subject" placeholder="선택 사항" />
+            </div>
+            <div class="row">
+              <label for="email_body">Body</label>
+              <textarea id="email_body" placeholder="선택 사항"></textarea>
+            </div>
+          </div>
+
+          <div id="panel-phone" class="panel-block hidden">
+            <div class="section-title">Phone</div>
+            <div class="row">
+              <label for="phone_number">Phone Number</label>
+              <input id="phone_number" placeholder="예: 01012345678" />
+            </div>
+          </div>
+
+          <div id="panel-sms" class="panel-block hidden">
+            <div class="section-title">SMS</div>
+            <div class="row">
+              <label for="sms_number">Phone Number</label>
+              <input id="sms_number" placeholder="예: 01012345678" />
+            </div>
+            <div class="row">
+              <label for="sms_message">Message</label>
+              <textarea id="sms_message" placeholder="보낼 메시지"></textarea>
+            </div>
+          </div>
+
+          <div id="panel-vcard" class="panel-block hidden">
+            <div class="section-title">vCard</div>
+            <div class="row">
+              <label for="vcard_name">Name</label>
+              <input id="vcard_name" placeholder="예: 홍길동" />
+            </div>
+            <div class="row">
+              <label for="vcard_phone">Phone</label>
+              <input id="vcard_phone" placeholder="예: 01012345678" />
+            </div>
+            <div class="row">
+              <label for="vcard_email">Email</label>
+              <input id="vcard_email" placeholder="예: test@example.com" />
+            </div>
           </div>
         </div>
 
-        <div id="section-wifi" class="hidden">
-          <div class="row">
-            <label for="ssid">SSID</label>
-            <input id="ssid" placeholder="Wi-Fi 이름" />
-          </div>
-
-          <div class="row">
-            <label for="password">Password</label>
-            <input id="password" placeholder="Wi-Fi 비밀번호" />
-          </div>
-
-          <div class="row inline-2">
-            <div>
-              <label for="encryption">Encryption</label>
-              <select id="encryption">
-                <option value="WPA">WPA</option>
-                <option value="WEP">WEP</option>
-                <option value="nopass">nopass</option>
-              </select>
-            </div>
-            <div class="check">
-              <input id="hidden" type="checkbox" />
-              <label for="hidden">숨김 SSID</label>
-            </div>
-          </div>
-        </div>
+        <div class="divider"></div>
 
         <div class="row inline-3">
           <div>
@@ -342,46 +515,92 @@
         <div class="row inline-3">
           <div>
             <label for="scale">Scale</label>
-            <input id="scale" type="number" min="4" max="64" value="20" />
+            <div class="number-field">
+              <button type="button" class="spin-btn" data-target="scale" data-delta="-1">−</button>
+              <input id="scale" type="number" min="4" max="64" step="1" value="10" />
+              <button type="button" class="spin-btn" data-target="scale" data-delta="1">+</button>
+            </div>
           </div>
           <div>
             <label for="border">Border</label>
-            <input id="border" type="number" min="1" max="16" value="4" />
+            <div class="number-field">
+              <button type="button" class="spin-btn" data-target="border" data-delta="-1">−</button>
+              <input id="border" type="number" min="1" max="16" step="1" value="4" />
+              <button type="button" class="spin-btn" data-target="border" data-delta="1">+</button>
+            </div>
           </div>
           <div>
             <label for="version">Version</label>
-            <input id="version" type="number" min="1" max="40" placeholder="auto" />
+            <div class="number-field">
+              <button type="button" class="spin-btn" data-target="version" data-delta="-1">−</button>
+              <input id="version" type="number" min="1" max="40" step="1" placeholder="auto" />
+              <button type="button" class="spin-btn" data-target="version" data-delta="1">+</button>
+            </div>
           </div>
         </div>
 
         <div class="row inline-2">
           <div>
             <label for="optimize">Optimize</label>
-            <input id="optimize" type="number" min="0" max="1000" value="20" />
+            <div class="number-field">
+              <button type="button" class="spin-btn" data-target="optimize" data-delta="-1">−</button>
+              <input id="optimize" type="number" min="0" max="1000" step="1" value="20" />
+              <button type="button" class="spin-btn" data-target="optimize" data-delta="1">+</button>
+            </div>
           </div>
           <div>
             <label for="jpg_quality">JPG Quality</label>
-            <input id="jpg_quality" type="number" min="1" max="100" value="95" />
+            <div class="number-field">
+              <button type="button" class="spin-btn" data-target="jpg_quality" data-delta="-1">−</button>
+              <input id="jpg_quality" type="number" min="1" max="100" step="1" value="95" />
+              <button type="button" class="spin-btn" data-target="jpg_quality" data-delta="1">+</button>
+            </div>
           </div>
         </div>
 
         <div class="row">
           <label>Foreground RGB</label>
           <div class="row inline-3">
-            <input id="fg_r" type="number" min="0" max="255" value="0" />
-            <input id="fg_g" type="number" min="0" max="255" value="0" />
-            <input id="fg_b" type="number" min="0" max="255" value="0" />
+            <div class="number-field">
+              <button type="button" class="spin-btn" data-target="fg_r" data-delta="-1">−</button>
+              <input id="fg_r" type="number" min="0" max="255" step="1" value="0" />
+              <button type="button" class="spin-btn" data-target="fg_r" data-delta="1">+</button>
+            </div>
+            <div class="number-field">
+              <button type="button" class="spin-btn" data-target="fg_g" data-delta="-1">−</button>
+              <input id="fg_g" type="number" min="0" max="255" step="1" value="0" />
+              <button type="button" class="spin-btn" data-target="fg_g" data-delta="1">+</button>
+            </div>
+            <div class="number-field">
+              <button type="button" class="spin-btn" data-target="fg_b" data-delta="-1">−</button>
+              <input id="fg_b" type="number" min="0" max="255" step="1" value="0" />
+              <button type="button" class="spin-btn" data-target="fg_b" data-delta="1">+</button>
+            </div>
           </div>
         </div>
+
         <div class="row">
           <label>Background RGB</label>
           <div class="row inline-3">
-            <input id="bg_r" type="number" min="0" max="255" value="255" />
-            <input id="bg_g" type="number" min="0" max="255" value="255" />
-            <input id="bg_b" type="number" min="0" max="255" value="255" />
+            <div class="number-field">
+              <button type="button" class="spin-btn" data-target="bg_r" data-delta="-1">−</button>
+              <input id="bg_r" type="number" min="0" max="255" step="1" value="255" />
+              <button type="button" class="spin-btn" data-target="bg_r" data-delta="1">+</button>
+            </div>
+            <div class="number-field">
+              <button type="button" class="spin-btn" data-target="bg_g" data-delta="-1">−</button>
+              <input id="bg_g" type="number" min="0" max="255" step="1" value="255" />
+              <button type="button" class="spin-btn" data-target="bg_g" data-delta="1">+</button>
+            </div>
+            <div class="number-field">
+              <button type="button" class="spin-btn" data-target="bg_b" data-delta="-1">−</button>
+              <input id="bg_b" type="number" min="0" max="255" step="1" value="255" />
+              <button type="button" class="spin-btn" data-target="bg_b" data-delta="1">+</button>
+            </div>
           </div>
-          <div class="small">PNG는 배경이 투명합니다. JPG/SVG에만 배경색이 적용됩니다.</div>
+          <div class="small">PNG는 배경이 투명합니다. JPG/SVG에서만 배경색이 적용됩니다.</div>
         </div>
+
         <div class="row">
           <label>Color Presets</label>
           <div class="color-presets">
@@ -389,27 +608,28 @@
             <button type="button" class="preset-btn" data-fg="255,255,255" data-bg="0,0,0" style="background: linear-gradient(90deg, rgb(255,255,255) 50%, rgb(0,0,0) 50%);"></button>
             <button type="button" class="preset-btn" data-fg="37,99,235" data-bg="255,255,255" style="background: linear-gradient(90deg, rgb(37,99,235) 50%, rgb(255,255,255) 50%);"></button>
             <button type="button" class="preset-btn" data-fg="220,38,38" data-bg="255,255,255" style="background: linear-gradient(90deg, rgb(220,38,38) 50%, rgb(255,255,255) 50%);"></button>
+            <button type="button" class="preset-btn" data-fg="16,185,129" data-bg="255,255,255" style="background: linear-gradient(90deg, rgb(16,185,129) 50%, rgb(255,255,255) 50%);"></button>
           </div>
         </div>
 
         <div class="actions">
-          <button class="primary" id="btn-preview">미리보기</button>
-          <button id="btn-download">다운로드</button>
-          <button id="btn-copy">이미지 주소 복사</button>
+          <button class="primary" id="btn-preview" type="button">미리보기</button>
+          <button id="btn-download" type="button">다운로드</button>
+          <button id="btn-copy" type="button">공유 링크 복사</button>
         </div>
 
         <div class="row" style="margin-top: 14px;">
-          <div class="hint" id="hint">특수문자가 많은 문자열은 브라우저 GET이 아니라 내부적으로 POST /render로 전송됩니다.</div>
+          <div class="hint" id="hint">특수문자가 많은 데이터는 내부적으로 POST /render로 전송됩니다.</div>
           <div class="error hidden" id="error"></div>
         </div>
       </div>
 
       <div class="card preview-wrap">
         <h2>Preview</h2>
-        <div class="meta">
-          <div>PNG: 투명 배경</div>
-          <div>JPG: 배경색 적용</div>
-          <div>SVG: 벡터</div>
+        <div class="preview-meta">
+          <div class="chip">PNG: 투명 배경</div>
+          <div class="chip">JPG: 배경색 적용</div>
+          <div class="chip">SVG: 벡터 출력</div>
         </div>
         <div class="preview-box">
           <img id="preview" alt="QR preview" />

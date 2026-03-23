@@ -124,11 +124,15 @@ def qr_ui(request: Request):
 
 @app.get("/")
 def generate_qr_get(
-    qr_type: str = Query("raw", alias="type", description="raw | text | url | wifi"),
+    qr_type: str = Query(
+        "text",
+        alias="type",
+        description="text | url | wifi | email | phone | sms | vcard"
+    ),
     style: str = Query("dot", description="dot | square"),
     fmt: str = Query("svg", alias="format", description="svg | png | jpg"),
     download: bool = Query(False, description="파일 다운로드 여부"),
-    scale: int = Query(20, ge=4, le=64, description="모듈 크기"),
+    scale: int = Query(10, ge=4, le=64, description="모듈 크기"),
     border: int = Query(4, ge=1, le=16, description="QR border size"),
 
     fg_r: int = Query(0, ge=0, le=255, description="foreground red"),
@@ -144,25 +148,64 @@ def generate_qr_get(
     optimize: int = Query(20, ge=0, le=1000, description="data segmentation optimize value"),
     jpg_quality: int = Query(95, ge=1, le=100, description="JPEG quality"),
 
-    data: str | None = Query(None, description="일반 문자열"),
-    data_b64: str | None = Query(None, description="base64url encoded 문자열"),
-    url: str | None = Query(None, description="URL"),
+    # Text
+    text: str | None = Query(None, description="text content"),
+    text_b64: str | None = Query(None, description="base64url encoded text"),
 
-    ssid: str | None = Query(None, description="Wi-Fi SSID"),
-    password: str | None = Query(None, description="Wi-Fi password"),
-    encryption: str | None = Query("WPA", description="WPA | WEP | nopass"),
-    hidden: bool = Query(False, description="숨김 SSID 여부"),
+    # URL
+    url: str | None = Query(None, description="URL"),
+    url_b64: str | None = Query(None, description="base64url encoded URL"),
+
+    # Wi-Fi
+    wifi_ssid: str | None = Query(None, description="Wi-Fi SSID"),
+    wifi_password: str | None = Query(None, description="Wi-Fi password"),
+    wifi_encryption: str | None = Query("WPA", description="WPA | WEP | nopass"),
+    wifi_hidden: bool = Query(False, description="hidden SSID"),
+
+    # Email
+    email_address: str | None = Query(None, description="email address"),
+    email_subject: str | None = Query(None, description="email subject"),
+    email_body: str | None = Query(None, description="email body"),
+
+    # Phone
+    phone_number: str | None = Query(None, description="phone number"),
+
+    # SMS
+    sms_number: str | None = Query(None, description="sms phone number"),
+    sms_message: str | None = Query(None, description="sms message"),
+
+    # vCard
+    vcard_name: str | None = Query(None, description="vcard name"),
+    vcard_phone: str | None = Query(None, description="vcard phone"),
+    vcard_email: str | None = Query(None, description="vcard email"),
 ):
     try:
         req = QRRequestData(
             qr_type=qr_type,
-            data=data,
-            data_b64=data_b64,
+
+            text=text,
+            text_b64=text_b64,
+
             url=url,
-            ssid=ssid,
-            password=password,
-            encryption=encryption,
-            hidden=hidden,
+            url_b64=url_b64,
+
+            wifi_ssid=wifi_ssid,
+            wifi_password=wifi_password,
+            wifi_encryption=wifi_encryption,
+            wifi_hidden=wifi_hidden,
+
+            email_address=email_address,
+            email_subject=email_subject,
+            email_body=email_body,
+
+            phone_number=phone_number,
+
+            sms_number=sms_number,
+            sms_message=sms_message,
+
+            vcard_name=vcard_name,
+            vcard_phone=vcard_phone,
+            vcard_email=vcard_email,
         )
 
         return render_response(
@@ -195,14 +238,31 @@ def generate_qr_post(
 ):
     try:
         req = QRRequestData(
-            qr_type=body.get("type", "raw"),
-            data=body.get("data"),
-            data_b64=body.get("data_b64"),
+            qr_type=body.get("type", "text"),
+
+            text=body.get("text"),
+            text_b64=body.get("text_b64"),
+
             url=body.get("url"),
-            ssid=body.get("ssid"),
-            password=body.get("password"),
-            encryption=body.get("encryption", "WPA"),
-            hidden=body.get("hidden", False),
+            url_b64=body.get("url_b64"),
+
+            wifi_ssid=body.get("wifi_ssid"),
+            wifi_password=body.get("wifi_password"),
+            wifi_encryption=body.get("wifi_encryption", "WPA"),
+            wifi_hidden=body.get("wifi_hidden", False),
+
+            email_address=body.get("email_address"),
+            email_subject=body.get("email_subject"),
+            email_body=body.get("email_body"),
+
+            phone_number=body.get("phone_number"),
+
+            sms_number=body.get("sms_number"),
+            sms_message=body.get("sms_message"),
+
+            vcard_name=body.get("vcard_name"),
+            vcard_phone=body.get("vcard_phone"),
+            vcard_email=body.get("vcard_email"),
         )
 
         return render_response(
@@ -210,7 +270,7 @@ def generate_qr_post(
             style=body.get("style", "dot"),
             fmt=body.get("format", "svg"),
             download=body.get("download", False),
-            scale=body.get("scale", 20),
+            scale=body.get("scale", 10),
             border=body.get("border", 4),
             fg_r=body.get("fg_r", 0),
             fg_g=body.get("fg_g", 0),
@@ -227,3 +287,4 @@ def generate_qr_post(
         raise HTTPException(status_code=400, detail=str(exc)) from exc
     except Exception as exc:
         raise HTTPException(status_code=500, detail=f"failed to generate qr: {exc}") from exc
+    

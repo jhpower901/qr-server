@@ -158,8 +158,8 @@ def draw_finder(
     middle = 5 * scale
     inner = 3 * scale
 
-    outer_rx = scale * 1.55
-    middle_rx = scale * 1.10
+    outer_rx = scale * 2
+    middle_rx = scale * 1.2
     inner_rx = scale * 0.72
 
     x1, y1 = x, y
