@@ -1,0 +1,15 @@
+services:
+  qr-server:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: qr-server
+    restart: unless-stopped
+    expose:
+      - "8000"
+    networks:
+      - proxy
+
+networks:
+  proxy:
+    external: true
