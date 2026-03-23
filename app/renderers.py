@@ -147,26 +147,60 @@ def draw_finder(
     y: int,
     scale: int,
     color: str,
-    background: str | None,
 ) -> None:
+    """
+    배경색과 무관하게 동작하는 finder.
+    가운데 영역을 실제로 비워서(구멍) PNG에서는 투명, JPG/SVG에서는 배경이 보이게 만듭니다.
+    """
     fill = html.escape(color)
-    inner_bg = "white" if background is None else html.escape(background)
 
     outer = 7 * scale
     middle = 5 * scale
     inner = 3 * scale
 
+    outer_rx = scale * 1.55
+    middle_rx = scale * 1.10
+    inner_rx = scale * 0.72
+
+    x1, y1 = x, y
+    x2, y2 = x + scale, y + scale
+    x3, y3 = x + 2 * scale, y + 2 * scale
+
+    # evenodd fill 규칙을 이용해서:
+    # 1) 바깥 rounded rect를 채우고
+    # 2) 가운데 rounded rect를 "구멍"으로 뚫습니다.
+    # 그러면 배경색이 무엇이든 자연스럽게 보입니다.
+    path = f"""
+    <path fill="{fill}" fill-rule="evenodd" d="
+        M {x1 + outer_rx:.2f} {y1:.2f}
+        H {x1 + outer - outer_rx:.2f}
+        A {outer_rx:.2f} {outer_rx:.2f} 0 0 1 {x1 + outer:.2f} {y1 + outer_rx:.2f}
+        V {y1 + outer - outer_rx:.2f}
+        A {outer_rx:.2f} {outer_rx:.2f} 0 0 1 {x1 + outer - outer_rx:.2f} {y1 + outer:.2f}
+        H {x1 + outer_rx:.2f}
+        A {outer_rx:.2f} {outer_rx:.2f} 0 0 1 {x1:.2f} {y1 + outer - outer_rx:.2f}
+        V {y1 + outer_rx:.2f}
+        A {outer_rx:.2f} {outer_rx:.2f} 0 0 1 {x1 + outer_rx:.2f} {y1:.2f}
+        Z
+
+        M {x2 + middle_rx:.2f} {y2:.2f}
+        H {x2 + middle - middle_rx:.2f}
+        A {middle_rx:.2f} {middle_rx:.2f} 0 0 1 {x2 + middle:.2f} {y2 + middle_rx:.2f}
+        V {y2 + middle - middle_rx:.2f}
+        A {middle_rx:.2f} {middle_rx:.2f} 0 0 1 {x2 + middle - middle_rx:.2f} {y2 + middle:.2f}
+        H {x2 + middle_rx:.2f}
+        A {middle_rx:.2f} {middle_rx:.2f} 0 0 1 {x2:.2f} {y2 + middle - middle_rx:.2f}
+        V {y2 + middle_rx:.2f}
+        A {middle_rx:.2f} {middle_rx:.2f} 0 0 1 {x2 + middle_rx:.2f} {y2:.2f}
+        Z
+    "/>
+    """
+    out.write(path)
+
+    # 가운데 안쪽 진한 마커
     out.write(
-        f'<rect x="{x}" y="{y}" width="{outer}" height="{outer}" '
-        f'rx="{scale * 1.55:.2f}" fill="{fill}"/>'
-    )
-    out.write(
-        f'<rect x="{x + scale}" y="{y + scale}" width="{middle}" height="{middle}" '
-        f'rx="{scale * 1.10:.2f}" fill="{inner_bg}"/>'
-    )
-    out.write(
-        f'<rect x="{x + 2 * scale}" y="{y + 2 * scale}" width="{inner}" height="{inner}" '
-        f'rx="{scale * 0.72:.2f}" fill="{fill}"/>'
+        f'<rect x="{x3}" y="{y3}" width="{inner}" height="{inner}" '
+        f'rx="{inner_rx:.2f}" fill="{fill}"/>'
     )
 
 
@@ -175,7 +209,6 @@ def draw_all_finders(
     matrix: List[List[bool]],
     scale: int,
     color: str,
-    background: str | None,
     border: int,
 ) -> None:
     n = len(matrix)
@@ -187,7 +220,7 @@ def draw_all_finders(
     ]
 
     for x, y in positions:
-        draw_finder(out, x, y, scale, color, background)
+        draw_finder(out, x, y, scale, color)
 
 
 def matrix_to_svg(
@@ -210,7 +243,7 @@ def matrix_to_svg(
 
     if style == "dot":
         draw_dot_modules(out, matrix, scale, color, border)
-        draw_all_finders(out, matrix, scale, color, background, border)
+        draw_all_finders(out, matrix, scale, color, border)
     else:
         draw_square_modules(out, matrix, scale, color)
         if background is not None:
