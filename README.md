@@ -1,7 +1,7 @@
 # QR Server (qr.example.kr)
 
 FastAPI 기반의 **QR 코드 생성 API 서버**입니다.
-URL, 텍스트, Wi-Fi QR을 지원하며 SVG / PNG로 반환합니다.
+URL, 텍스트, Wi-Fi QR을 지원하며 SVG / PNG / JPG로 반환합니다.
 
 ---
 
@@ -10,10 +10,14 @@ URL, 텍스트, Wi-Fi QR을 지원하며 SVG / PNG로 반환합니다.
 * ✅ URL QR
 * ✅ Text QR (임의 문자열)
 * ✅ Wi-Fi QR (SSID / Password / Encryption)
-* ✅ SVG / PNG 출력 지원
+* ✅ SVG / PNG / JPG 출력
+* ✅ PNG 투명 배경 지원
+* ✅ JPG 배경색 적용
+* ✅ RGB 색상 커스터마이징
 * ✅ 다운로드 (`Content-Disposition`)
 * ✅ dot / square 스타일
-* ✅ **특수문자 안전 처리 (`data_b64`, POST 지원)**
+* ✅ 특수문자 안전 처리 (`data_b64`, POST 지원)
+* ✅ QR version / optimize 파라미터 지원
 * ✅ 확장 가능한 구조 (encoder / renderer 분리)
 
 ---
@@ -26,19 +30,19 @@ URL, 텍스트, Wi-Fi QR을 지원하며 SVG / PNG로 반환합니다.
 https://qr.example.kr/?type=url&url=www.naver.com
 ```
 
-👉 HTML 페이지가 아니라 **QR 이미지 자체가 응답됩니다**
+👉 요청하면 **HTML이 아니라 QR 이미지 자체를 반환합니다**
 
-### 적합한 사용
+### 사용 용도
 
 * 백엔드에서 QR 이미지 생성
 * 자동화 / 봇 / 내부 서비스
 * self-hosted QR API
 
-### 포함되지 않은 것
+### 포함되지 않는 기능
 
-* 입력 폼 UI
-* 버튼 기반 생성 페이지
-* QR 관리 기능
+* 웹 입력 폼 UI
+* QR 관리 페이지
+* 사용자 인터페이스
 
 ---
 
@@ -48,9 +52,9 @@ https://qr.example.kr/?type=url&url=www.naver.com
 qr-server/
 ├── app
 │   ├── __init__.py
-│   ├── encoders.py        # QR payload 생성 로직
-│   ├── renderers.py       # QR → SVG/PNG 렌더링
-│   └── main.py            # FastAPI 엔드포인트
+│   ├── encoders.py        # QR payload 생성
+│   ├── renderers.py       # SVG / PNG / JPG 렌더링
+│   └── main.py            # FastAPI API
 ├── requirements.txt
 ├── Dockerfile
 └── docker-compose.yml
@@ -60,17 +64,13 @@ qr-server/
 
 ## ⚙️ Run
 
-### Docker Compose
-
 ```bash
 docker compose up -d --build
 ```
 
 ---
 
-## 🌐 API Usage
-
-기본 엔드포인트:
+## 🌐 API Endpoint
 
 ```
 https://qr.example.kr/
@@ -78,7 +78,9 @@ https://qr.example.kr/
 
 ---
 
-## 🔹 1. Text QR
+# 🧪 Basic Usage
+
+## Text QR
 
 ```text
 https://qr.example.kr/?type=text&data=안녕하세요
@@ -86,76 +88,122 @@ https://qr.example.kr/?type=text&data=안녕하세요
 
 ---
 
-## 🔹 2. URL QR
+## URL QR
 
 ```text
 https://qr.example.kr/?type=url&url=www.naver.com
 ```
 
-자동으로 `https://` 붙습니다.
+👉 자동으로 `https://` 보정됨
 
 ---
 
-## 🔹 3. Wi-Fi QR
-
-### 기본 (WPA)
+## Wi-Fi QR
 
 ```text
 https://qr.example.kr/?type=wifi&ssid=MyWifi&password=12345678&encryption=WPA
 ```
 
-### 비밀번호 없음
+---
+
+# 🖼️ Format
+
+| format | 설명     |
+| ------ | ------ |
+| svg    | 기본     |
+| png    | 배경 투명  |
+| jpg    | 배경색 적용 |
+
+---
+
+## PNG (투명 배경)
 
 ```text
-https://qr.example.kr/?type=wifi&ssid=GuestWifi&encryption=nopass
-```
-
-### 숨김 SSID
-
-```text
-https://qr.example.kr/?type=wifi&ssid=HiddenNet&password=12345678&hidden=true
+https://qr.example.kr/?type=text&data=hello&format=png
 ```
 
 ---
 
-## 🔥 특수문자 포함 데이터 처리 (중요)
-
-QR 데이터에 아래 문자가 포함되면 문제가 발생할 수 있습니다:
+## JPG (배경 포함)
 
 ```text
+https://qr.example.kr/?type=text&data=hello&format=jpg
+```
+
+---
+
+# 🎨 색상 설정 (RGB)
+
+## 전경색 (QR 색)
+
+```text
+fg_r=255&fg_g=0&fg_b=0
+```
+
+## 배경색
+
+```text
+bg_r=255&bg_g=255&bg_b=0
+```
+
+---
+
+## 예시
+
+### 빨간 QR (PNG)
+
+```text
+https://qr.example.kr/?type=text&data=hello&format=png&fg_r=255&fg_g=0&fg_b=0
+```
+
+---
+
+### 검정 배경 + 흰 QR (JPG)
+
+```text
+https://qr.example.kr/?type=text&data=hello&format=jpg&fg_r=255&fg_g=255&fg_b=255&bg_r=0&bg_g=0&bg_b=0
+```
+
+---
+
+# 📥 다운로드
+
+```text
+?download=true
+```
+
+---
+
+# 🔥 특수문자 데이터 처리 (중요)
+
+다음 문자가 포함된 경우:
+
+```
 &, ?, #
 ```
 
-### ❌ 문제
-
-```text
-data=vless://...?x=1&y=2#tag
-```
-
-* `&` → 파라미터 분리됨
-* `#` → 서버로 전달되지 않음
+👉 일반 `data=`는 깨질 수 있음
 
 ---
 
-## ✅ 해결 방법 1: data_b64 사용 (추천)
+## 방법 1: data_b64 (추천)
 
 ```text
-https://qr.example.kr/?type=text&data_b64=BASE64URL&format=png
+https://qr.example.kr/?type=text&data_b64=BASE64URL
 ```
 
-### Python 예시
+### Python
 
 ```python
 import base64
 
 raw = "vless://example?x=1&y=2#tag"
 encoded = base64.urlsafe_b64encode(raw.encode()).decode().rstrip("=")
-print(encoded)
 ```
 
 ---
 
-## ✅ 해결 방법 2: POST /render (가장 안전)
+## 방법 2: POST /render (가장 안전)
 
 ```bash
 curl -X POST "https://qr.example.kr/render" \
@@ -168,92 +216,42 @@ curl -X POST "https://qr.example.kr/render" \
   }'
 ```
 
-👉 긴 문자열 / 설정 문자열은 이 방법 권장
-
 ---
 
-## 🎨 Style 옵션
-
-| 값      | 설명         |
-| ------ | ---------- |
-| dot    | 점 스타일 (기본) |
-| square | 정사각형       |
-
----
-
-## 🖼️ Format 옵션
-
-| 값   | 설명      |
-| --- | ------- |
-| svg | 기본      |
-| png | PNG 이미지 |
-
----
-
-## 📥 다운로드
-
-```text
-?download=true
-```
-
----
-
-## 🎯 전체 파라미터
+# ⚙️ Advanced Parameters
 
 | 파라미터             | 설명                      |
 | ---------------- | ----------------------- |
 | type             | raw / text / url / wifi |
-| data             | 문자열                     |
-| data_b64         | base64url 인코딩 문자열       |
-| url              | URL                     |
-| ssid             | Wi-Fi 이름                |
-| password         | Wi-Fi 비밀번호              |
-| encryption       | WPA / WEP / nopass      |
-| hidden           | true / false            |
 | style            | dot / square            |
-| format           | svg / png               |
-| download         | true / false            |
+| format           | svg / png / jpg         |
 | scale            | QR 크기                   |
 | border           | 여백                      |
-| color            | 전경색                     |
-| background       | 배경색                     |
 | error_correction | L / M / Q / H           |
+| version          | QR version (1~40)       |
+| optimize         | 데이터 최적화                 |
+| download         | 파일 다운로드                 |
+| fg_r,g,b         | 전경 RGB                  |
+| bg_r,g,b         | 배경 RGB                  |
+| data_b64         | base64url 데이터           |
 
 ---
 
-## 🧪 Examples
-
-### PNG 다운로드
-
-```text
-https://qr.example.kr/?type=url&url=www.naver.com&format=png&download=true
-```
-
----
-
-### Wi-Fi QR PNG
-
-```text
-https://qr.example.kr/?type=wifi&ssid=MyWifi&password=12345678&format=png
-```
-
----
-
-## 🧠 Architecture
+# 🧠 Architecture
 
 ```
 [Request]
    ↓
-[encoders.py]  → QR payload 생성
+[encoders.py] → QR payload 생성
    ↓
-[renderers.py] → SVG 생성 / PNG 변환
+[renderers.py] → SVG 생성 → PNG/JPG 변환
    ↓
 [Response]
 ```
 
 ---
 
-## 🔌 Extending (확장 방법)
+# 🔌 Extending
 
 ```python
 class EmailEncoder:
@@ -267,28 +265,28 @@ ENCODER_REGISTRY["email"] = EmailEncoder()
 
 ---
 
-## ⚠️ Notes
+# ⚠️ Notes
 
-* PNG 변환은 `cairosvg` 사용
-* Wi-Fi QR은 표준 형식 사용
+* PNG는 배경 투명
+* JPG는 배경색 필요
+* 긴 데이터 → QR 복잡도 증가
 * 스타일 과도 변경 시 인식률 저하 가능
-* 긴 문자열은 QR 밀도 증가
-* `data` 대신 `data_b64` 또는 `POST` 사용 권장
+* 특수문자 포함 데이터는 `data_b64` 또는 POST 사용
 
 ---
 
-## 📌 TODO (확장 예정)
+# 📌 TODO
 
-* [ ] Email QR (`mailto:`)
-* [ ] Phone QR (`tel:`)
+* [ ] Email QR
+* [ ] Phone QR
 * [ ] SMS QR
-* [ ] vCard (연락처)
+* [ ] vCard
 * [ ] Logo 삽입
 * [ ] Redis 캐싱
 * [ ] Rate limiting
 
 ---
 
-## 🧾 License
+# 🧾 License
 
 MIT

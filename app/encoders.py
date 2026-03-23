@@ -20,7 +20,7 @@ class QRRequestData:
     # wifi
     ssid: str | None = None
     password: str | None = None
-    encryption: str | None = None   # WPA | WEP | nopass
+    encryption: str | None = None
     hidden: bool = False
 
 

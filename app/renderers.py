@@ -6,16 +6,30 @@ from typing import List, Tuple
 
 import cairosvg
 import qrcode
+from PIL import Image
 
 
 class RenderError(ValueError):
     pass
 
 
+def validate_rgb(r: int, g: int, b: int, name: str) -> tuple[int, int, int]:
+    for v in (r, g, b):
+        if not (0 <= v <= 255):
+            raise RenderError(f"{name} RGB values must be between 0 and 255")
+    return r, g, b
+
+
+def rgb_to_css(r: int, g: int, b: int) -> str:
+    return f"rgb({r}, {g}, {b})"
+
+
 def build_qr_matrix(
     data: str,
     border: int = 4,
-    error_correction: str = "M",
+    error_correction: str = "H",
+    version: int | None = None,
+    optimize: int = 20,
 ) -> tuple[list[list[bool]], int]:
     ec_map = {
         "L": qrcode.constants.ERROR_CORRECT_L,
@@ -28,31 +42,30 @@ def build_qr_matrix(
     if ec not in ec_map:
         raise RenderError("error_correction must be one of L, M, Q, H")
 
+    if version is not None and not (1 <= version <= 40):
+        raise RenderError("version must be between 1 and 40")
+
     qr = qrcode.QRCode(
-        version=None,
+        version=version,
         error_correction=ec_map[ec],
         box_size=10,
         border=border,
     )
-    qr.add_data(data)
-    qr.make(fit=True)
+    qr.add_data(data, optimize=optimize)
+    qr.make(fit=(version is None))
 
     return qr.get_matrix(), qr.version
 
 
 def is_in_finder_zone(row: int, col: int, n: int, border: int) -> bool:
-    """
-    Finder pattern(좌상, 우상, 좌하) 영역과 그 주변 1칸까지 제외합니다.
-    dot 렌더링 시 finder를 따로 예쁘게 그리기 위해 사용합니다.
-    """
     top = border
     left = border
     size = 7
 
     zones = [
-        (top - 1, left - 1),           # top-left
-        (top - 1, n - border - size), # top-right
-        (n - border - size, left - 1) # bottom-left
+        (top - 1, left - 1),
+        (top - 1, n - border - size),
+        (n - border - size, left - 1),
     ]
 
     for zr, zc in zones:
@@ -61,13 +74,17 @@ def is_in_finder_zone(row: int, col: int, n: int, border: int) -> bool:
     return False
 
 
-def svg_header(total_px: int, background: str) -> str:
-    bg = html.escape(background)
+def svg_header(total_px: int, background: str | None) -> str:
+    if background is None:
+        bg_rect = ""
+    else:
+        bg_rect = f'<rect width="{total_px}" height="{total_px}" fill="{html.escape(background)}"/>'
+
     return (
         f'<svg xmlns="http://www.w3.org/2000/svg" '
         f'width="{total_px}" height="{total_px}" '
         f'viewBox="0 0 {total_px} {total_px}" fill="none">'
-        f'<rect width="{total_px}" height="{total_px}" fill="{bg}"/>'
+        f"{bg_rect}"
     )
 
 
@@ -82,14 +99,9 @@ def draw_dot_modules(
     color: str,
     border: int,
 ) -> None:
-    """
-    원형 dot 스타일 렌더링.
-    연결 바 없이 각 모듈을 독립적인 circle로 그립니다.
-    """
     fill = html.escape(color)
     n = len(matrix)
 
-    # 원 크기를 조금 키워서 더 촘촘하고 qr.io 느낌에 가깝게
     radius = scale * 0.5
 
     for r in range(n):
@@ -135,13 +147,10 @@ def draw_finder(
     y: int,
     scale: int,
     color: str,
-    background: str,
+    background: str | None,
 ) -> None:
-    """
-    qr.io 느낌의 둥근 finder pattern
-    """
     fill = html.escape(color)
-    bg = html.escape(background)
+    inner_bg = "white" if background is None else html.escape(background)
 
     outer = 7 * scale
     middle = 5 * scale
@@ -153,7 +162,7 @@ def draw_finder(
     )
     out.write(
         f'<rect x="{x + scale}" y="{y + scale}" width="{middle}" height="{middle}" '
-        f'rx="{scale * 1.10:.2f}" fill="{bg}"/>'
+        f'rx="{scale * 1.10:.2f}" fill="{inner_bg}"/>'
     )
     out.write(
         f'<rect x="{x + 2 * scale}" y="{y + 2 * scale}" width="{inner}" height="{inner}" '
@@ -166,7 +175,7 @@ def draw_all_finders(
     matrix: List[List[bool]],
     scale: int,
     color: str,
-    background: str,
+    background: str | None,
     border: int,
 ) -> None:
     n = len(matrix)
@@ -185,8 +194,8 @@ def matrix_to_svg(
     matrix: List[List[bool]],
     style: str = "dot",
     scale: int = 10,
-    color: str = "#000000",
-    background: str = "#ffffff",
+    color: str = "rgb(0, 0, 0)",
+    background: str | None = "rgb(255, 255, 255)",
     border: int = 4,
 ) -> str:
     style = style.lower()
@@ -204,6 +213,8 @@ def matrix_to_svg(
         draw_all_finders(out, matrix, scale, color, background, border)
     else:
         draw_square_modules(out, matrix, scale, color)
+        if background is not None:
+            pass
 
     out.write(svg_footer())
     return out.getvalue()
@@ -213,3 +224,16 @@ def svg_to_png_bytes(svg: str) -> bytes:
     buffer = BytesIO()
     cairosvg.svg2png(bytestring=svg.encode("utf-8"), write_to=buffer)
     return buffer.getvalue()
+
+
+def svg_to_jpg_bytes(svg: str, background_rgb: tuple[int, int, int], quality: int = 95) -> bytes:
+    png_bytes = svg_to_png_bytes(svg)
+
+    with Image.open(BytesIO(png_bytes)).convert("RGBA") as rgba:
+        bg = Image.new("RGB", rgba.size, background_rgb)
+        bg.paste(rgba, mask=rgba.getchannel("A"))
+
+        out = BytesIO()
+        bg.save(out, format="JPEG", quality=quality, optimize=True)
+        return out.getvalue()
+    
