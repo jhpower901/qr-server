@@ -1,9 +1,12 @@
 from __future__ import annotations
 
+from pathlib import Path
 from typing import Any
 
-from fastapi import Body, FastAPI, HTTPException, Query
-from fastapi.responses import Response
+from fastapi import Body, FastAPI, HTTPException, Query, Request
+from fastapi.responses import HTMLResponse, Response
+from fastapi.staticfiles import StaticFiles
+from fastapi.templating import Jinja2Templates
 
 from app.encoders import EncodeError, QRRequestData, encode_qr_payload
 from app.renderers import (
@@ -17,6 +20,10 @@ from app.renderers import (
 )
 
 app = FastAPI(title="QR Server")
+
+BASE_DIR = Path(__file__).resolve().parent
+templates = Jinja2Templates(directory=str(BASE_DIR / "templates"))
+app.mount("/static", StaticFiles(directory=str(BASE_DIR / "static")), name="static")
 
 
 def build_filename(qr_type: str, fmt: str) -> str:
@@ -104,6 +111,15 @@ def render_response(
 @app.get("/health")
 def health() -> dict[str, str]:
     return {"status": "ok"}
+
+
+@app.get("/ui", response_class=HTMLResponse)
+def qr_ui(request: Request):
+    return templates.TemplateResponse(
+        request=request,
+        name="index.html",
+        context={},
+    )
 
 
 @app.get("/")

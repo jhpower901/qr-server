@@ -1,0 +1,335 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>QR Server UI</title>
+  <style>
+    :root {
+      --bg: #0b0d10;
+      --panel: #151922;
+      --panel-2: #1c2230;
+      --text: #eef2f7;
+      --muted: #aab4c3;
+      --line: #2a3242;
+      --accent: #6aa9ff;
+    }
+
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Noto Sans KR", sans-serif;
+      background: var(--bg);
+      color: var(--text);
+    }
+
+    .wrap {
+      max-width: 1180px;
+      margin: 0 auto;
+      padding: 24px;
+    }
+
+    h1 {
+      margin: 0 0 8px;
+      font-size: 28px;
+    }
+
+    .sub {
+      margin: 0 0 24px;
+      color: var(--muted);
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: 420px 1fr;
+      gap: 20px;
+    }
+
+    .card {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      padding: 18px;
+    }
+
+    .card h2 {
+      margin: 0 0 14px;
+      font-size: 18px;
+    }
+
+    .row {
+      display: grid;
+      gap: 8px;
+      margin-bottom: 14px;
+    }
+
+    .row.inline-2 {
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
+
+    .row.inline-3 {
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 10px;
+    }
+
+    label {
+      font-size: 13px;
+      color: var(--muted);
+    }
+
+    input, select, textarea, button {
+      width: 100%;
+      border-radius: 10px;
+      border: 1px solid var(--line);
+      background: var(--panel-2);
+      color: var(--text);
+      padding: 10px 12px;
+      font-size: 14px;
+    }
+
+    textarea {
+      resize: vertical;
+      min-height: 96px;
+    }
+
+    input[type="checkbox"] {
+      width: auto;
+      transform: scale(1.1);
+    }
+
+    .check {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      min-height: 42px;
+      padding: 0 4px;
+    }
+
+    .actions {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 10px;
+      margin-top: 8px;
+    }
+
+    button {
+      cursor: pointer;
+      font-weight: 600;
+    }
+
+    button.primary {
+      background: var(--accent);
+      color: #08111f;
+      border: 0;
+    }
+
+    .preview-wrap {
+      display: grid;
+      gap: 14px;
+    }
+
+    .preview-box {
+      min-height: 520px;
+      display: grid;
+      place-items: center;
+      border: 1px dashed var(--line);
+      border-radius: 16px;
+      background:
+        linear-gradient(45deg, #111 25%, transparent 25%) -10px 0/20px 20px,
+        linear-gradient(-45deg, #111 25%, transparent 25%) -10px 0/20px 20px,
+        linear-gradient(45deg, transparent 75%, #111 75%) -10px 0/20px 20px,
+        linear-gradient(-45deg, transparent 75%, #111 75%) -10px 0/20px 20px,
+        #0f1218;
+      overflow: hidden;
+    }
+
+    .preview-box img {
+      max-width: 100%;
+      max-height: 76vh;
+      display: block;
+    }
+
+    .hint, .error {
+      font-size: 13px;
+      color: var(--muted);
+    }
+
+    .error {
+      color: #ff8c8c;
+      white-space: pre-wrap;
+    }
+
+    .hidden {
+      display: none;
+    }
+
+    .small {
+      font-size: 12px;
+      color: var(--muted);
+    }
+
+    @media (max-width: 980px) {
+      .grid {
+        grid-template-columns: 1fr;
+      }
+
+      .preview-box {
+        min-height: 360px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <h1>QR Server UI</h1>
+    <p class="sub">텍스트 / URL / Wi-Fi QR을 생성하고 PNG / JPG / SVG로 내려받을 수 있습니다.</p>
+
+    <div class="grid">
+      <div class="card">
+        <h2>옵션</h2>
+
+        <div class="row">
+          <label for="type">Type</label>
+          <select id="type">
+            <option value="text">text</option>
+            <option value="url">url</option>
+            <option value="wifi">wifi</option>
+          </select>
+        </div>
+
+        <div id="section-text-url">
+          <div class="row" id="row-data">
+            <label for="data">Data / Text</label>
+            <textarea id="data" placeholder="예: 안녕하세요 / vless://... / 기타 텍스트"></textarea>
+          </div>
+
+          <div class="row hidden" id="row-url">
+            <label for="url">URL</label>
+            <input id="url" placeholder="예: www.naver.com" />
+          </div>
+        </div>
+
+        <div id="section-wifi" class="hidden">
+          <div class="row">
+            <label for="ssid">SSID</label>
+            <input id="ssid" placeholder="Wi-Fi 이름" />
+          </div>
+
+          <div class="row">
+            <label for="password">Password</label>
+            <input id="password" placeholder="Wi-Fi 비밀번호" />
+          </div>
+
+          <div class="row inline-2">
+            <div>
+              <label for="encryption">Encryption</label>
+              <select id="encryption">
+                <option value="WPA">WPA</option>
+                <option value="WEP">WEP</option>
+                <option value="nopass">nopass</option>
+              </select>
+            </div>
+            <div class="check">
+              <input id="hidden" type="checkbox" />
+              <label for="hidden">숨김 SSID</label>
+            </div>
+          </div>
+        </div>
+
+        <div class="row inline-3">
+          <div>
+            <label for="style">Style</label>
+            <select id="style">
+              <option value="dot">dot</option>
+              <option value="square">square</option>
+            </select>
+          </div>
+          <div>
+            <label for="format">Format</label>
+            <select id="format">
+              <option value="png">png</option>
+              <option value="jpg">jpg</option>
+              <option value="svg">svg</option>
+            </select>
+          </div>
+          <div>
+            <label for="error_correction">ECC</label>
+            <select id="error_correction">
+              <option value="H" selected>H</option>
+              <option value="Q">Q</option>
+              <option value="M">M</option>
+              <option value="L">L</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="row inline-3">
+          <div>
+            <label for="scale">Scale</label>
+            <input id="scale" type="number" min="4" max="64" value="20" />
+          </div>
+          <div>
+            <label for="border">Border</label>
+            <input id="border" type="number" min="1" max="16" value="4" />
+          </div>
+          <div>
+            <label for="version">Version</label>
+            <input id="version" type="number" min="1" max="40" placeholder="auto" />
+          </div>
+        </div>
+
+        <div class="row inline-2">
+          <div>
+            <label for="optimize">Optimize</label>
+            <input id="optimize" type="number" min="0" max="1000" value="20" />
+          </div>
+          <div>
+            <label for="jpg_quality">JPG Quality</label>
+            <input id="jpg_quality" type="number" min="1" max="100" value="95" />
+          </div>
+        </div>
+
+        <div class="row">
+          <label>Foreground RGB</label>
+          <div class="row inline-3">
+            <input id="fg_r" type="number" min="0" max="255" value="0" />
+            <input id="fg_g" type="number" min="0" max="255" value="0" />
+            <input id="fg_b" type="number" min="0" max="255" value="0" />
+          </div>
+        </div>
+
+        <div class="row">
+          <label>Background RGB</label>
+          <div class="row inline-3">
+            <input id="bg_r" type="number" min="0" max="255" value="255" />
+            <input id="bg_g" type="number" min="0" max="255" value="255" />
+            <input id="bg_b" type="number" min="0" max="255" value="255" />
+          </div>
+          <div class="small">PNG는 배경이 투명합니다. JPG/SVG에만 배경색이 적용됩니다.</div>
+        </div>
+
+        <div class="actions">
+          <button class="primary" id="btn-preview">미리보기</button>
+          <button id="btn-download">다운로드</button>
+          <button id="btn-copy">이미지 주소 복사</button>
+        </div>
+
+        <div class="row" style="margin-top: 14px;">
+          <div class="hint" id="hint">특수문자가 많은 문자열은 브라우저 GET이 아니라 내부적으로 POST /render로 전송됩니다.</div>
+          <div class="error hidden" id="error"></div>
+        </div>
+      </div>
+
+      <div class="card preview-wrap">
+        <h2>Preview</h2>
+        <div class="preview-box">
+          <img id="preview" alt="QR preview" />
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="/static/app.js"></script>
+</body>
+</html>
