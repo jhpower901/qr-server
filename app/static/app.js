@@ -70,6 +70,36 @@ function collectPayload() {
   return payload;
 }
 
+let previewObjectUrl = null;
+let previewTimer = null;
+
+function revokePreviewUrl() {
+  if (previewObjectUrl) {
+    URL.revokeObjectURL(previewObjectUrl);
+    previewObjectUrl = null;
+  }
+}
+
+function debouncePreview() {
+  clearTimeout(previewTimer);
+  previewTimer = setTimeout(() => {
+    previewQr();
+  }, 250);
+}
+
+function updateFormatHint() {
+  const format = getValue("format");
+  const hint = $("hint");
+
+  if (format === "png") {
+    hint.textContent = "PNG는 배경이 투명합니다.";
+  } else if (format === "jpg") {
+    hint.textContent = "JPG는 배경색이 적용됩니다.";
+  } else {
+    hint.textContent = "SVG는 벡터 포맷이며 배경색이 적용됩니다.";
+  }
+}
+
 async function renderQr(download = false) {
   showError("");
 
@@ -102,8 +132,10 @@ async function renderQr(download = false) {
 async function previewQr() {
   try {
     const blob = await renderQr(false);
-    const objectUrl = URL.createObjectURL(blob);
-    $("preview").src = objectUrl;
+    revokePreviewUrl();
+    previewObjectUrl = URL.createObjectURL(blob);
+    $("preview").src = previewObjectUrl;
+    updateFormatHint();
   } catch (err) {
     showError(String(err.message || err));
   }
@@ -191,12 +223,38 @@ function applyPayloadFromQuery() {
 }
 
 window.addEventListener("DOMContentLoaded", () => {
-  $("type").addEventListener("change", updateTypeUI);
+  $("type").addEventListener("change", () => {
+    updateTypeUI();
+    debouncePreview();
+  });
+
   $("btn-preview").addEventListener("click", previewQr);
   $("btn-download").addEventListener("click", downloadQr);
   $("btn-copy").addEventListener("click", copyImageUrl);
 
+  document.querySelectorAll("input, select, textarea").forEach((el) => {
+    el.addEventListener("input", debouncePreview);
+    el.addEventListener("change", debouncePreview);
+  });
+
+  document.querySelectorAll(".preset-btn").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      const [fr, fg, fb] = btn.dataset.fg.split(",").map(Number);
+      const [br, bg, bb] = btn.dataset.bg.split(",").map(Number);
+
+      $("fg_r").value = fr;
+      $("fg_g").value = fg;
+      $("fg_b").value = fb;
+      $("bg_r").value = br;
+      $("bg_g").value = bg;
+      $("bg_b").value = bb;
+
+      debouncePreview();
+    });
+  });
+
   updateTypeUI();
   applyPayloadFromQuery();
+  updateFormatHint();
   previewQr();
 });
