@@ -177,7 +177,7 @@ async function renderQr(download = false) {
   const payload = buildApiPayload();
   payload.download = download;
 
-  const response = await fetch("/api/render", {
+  const response = await fetch("/api", {
     method: "POST",
     headers: {
       "Content-Type": "application/json",

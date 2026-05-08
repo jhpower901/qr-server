@@ -237,7 +237,7 @@ def generate_qr_get(
         raise HTTPException(status_code=500, detail=f"failed to generate qr: {exc}") from exc
 
 
-@app.post("/api/render")
+@app.post("/api")
 def generate_qr_post(
     body: dict[str, Any] = Body(...),
 ):
