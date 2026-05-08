@@ -31,7 +31,7 @@ Text, URL, Wi-Fi, Email 등 다양한 QR을 생성하고 SVG / PNG / JPG로 반�
 
 ### UI
 
-- ✅ `/ui` 웹 인터페이스
+- ✅ `/` 웹 인터페이스
 - ✅ 실시간 미리보기
 - ✅ 색상 프리셋
 - ✅ 공유 링크 생성
@@ -45,7 +45,7 @@ Text, URL, Wi-Fi, Email 등 다양한 QR을 생성하고 SVG / PNG / JPG로 반�
 ### 1) API 모드
 
 ```text
-https://qr.example.kr/?type=text&text=hello
+https://qr.example.kr/api?type=text&text=hello
 ```
 
 👉 QR 이미지가 바로 반환됩니다.
@@ -53,7 +53,7 @@ https://qr.example.kr/?type=text&text=hello
 ### 2) UI 모드
 
 ```text
-https://qr.example.kr/ui
+https://qr.example.kr/
 ```
 
 👉 브라우저에서 직접 생성하고 다운로드할 수 있습니다.
@@ -92,9 +92,10 @@ docker compose up -d --build
 
 | 경로 | 설명 |
 |------|------|
-| `/` | QR 이미지 생성 (GET) |
-| `/render` | QR 생성 (POST) |
-| `/ui` | 웹 UI |
+| `/` | 웹 UI |
+| `/ui` | `/` 로 redirect (301) |
+| `GET /api` | QR 이미지 생성 (쿼리 파라미터) |
+| `POST /api` | QR 이미지 생성 (JSON body) |
 | `/health` | 헬스체크 |
 
 ---
@@ -106,13 +107,13 @@ docker compose up -d --build
 ### Text
 
 ```text
-https://qr.example.kr/?type=text&text=안녕하세요
+https://qr.example.kr/api?type=text&text=안녕하세요
 ```
 
 ### Text Base64URL
 
 ```text
-https://qr.example.kr/?type=text&text_b64=7JWI64WV7ZWY7IS47JqU
+https://qr.example.kr/api?type=text&text_b64=7JWI64WV7ZWY7IS47JqU
 ```
 
 `text_b64`가 있으면 `text`보다 우선합니다.
@@ -120,7 +121,7 @@ https://qr.example.kr/?type=text&text_b64=7JWI64WV7ZWY7IS47JqU
 ### URL
 
 ```text
-https://qr.example.kr/?type=url&url=www.naver.com
+https://qr.example.kr/api?type=url&url=www.naver.com
 ```
 
 👉 `https://` 자동 보정
@@ -128,37 +129,37 @@ https://qr.example.kr/?type=url&url=www.naver.com
 ### URL Base64URL
 
 ```text
-https://qr.example.kr/?type=url&url_b64=aHR0cHM6Ly93d3cubmF2ZXIuY29t
+https://qr.example.kr/api?type=url&url_b64=aHR0cHM6Ly93d3cubmF2ZXIuY29t
 ```
 
 ### Wi-Fi
 
 ```text
-https://qr.example.kr/?type=wifi&wifi_ssid=MyWifi&wifi_password=12345678&wifi_encryption=WPA
+https://qr.example.kr/api?type=wifi&wifi_ssid=MyWifi&wifi_password=12345678&wifi_encryption=WPA
 ```
 
 ### Email
 
 ```text
-https://qr.example.kr/?type=email&email_address=test@example.com&email_subject=Hello&email_body=Hi
+https://qr.example.kr/api?type=email&email_address=test@example.com&email_subject=Hello&email_body=Hi
 ```
 
 ### Phone
 
 ```text
-https://qr.example.kr/?type=phone&phone_number=01012345678
+https://qr.example.kr/api?type=phone&phone_number=01012345678
 ```
 
 ### SMS
 
 ```text
-https://qr.example.kr/?type=sms&sms_number=01012345678&sms_message=Hello
+https://qr.example.kr/api?type=sms&sms_number=01012345678&sms_message=Hello
 ```
 
 ### vCard
 
 ```text
-https://qr.example.kr/?type=vcard&vcard_name=홍길동&vcard_phone=01012345678&vcard_email=test@example.com
+https://qr.example.kr/api?type=vcard&vcard_name=홍길동&vcard_phone=01012345678&vcard_email=test@example.com
 ```
 
 ---
@@ -170,7 +171,7 @@ https://qr.example.kr/?type=vcard&vcard_name=홍길동&vcard_phone=01012345678&v
 ### Text
 
 ```bash
-curl -X POST "https://qr.example.kr/render" \
+curl -X POST "https://qr.example.kr/api" \
   -H "Content-Type: application/json" \
   -o qr.png \
   -d '{
@@ -183,7 +184,7 @@ curl -X POST "https://qr.example.kr/render" \
 ### URL
 
 ```bash
-curl -X POST "https://qr.example.kr/render" \
+curl -X POST "https://qr.example.kr/api" \
   -H "Content-Type: application/json" \
   -d '{
     "type": "url",
@@ -194,7 +195,7 @@ curl -X POST "https://qr.example.kr/render" \
 ### Wi-Fi
 
 ```bash
-curl -X POST "https://qr.example.kr/render" \
+curl -X POST "https://qr.example.kr/api" \
   -H "Content-Type: application/json" \
   -d '{
     "type": "wifi",
@@ -207,7 +208,7 @@ curl -X POST "https://qr.example.kr/render" \
 ### Email
 
 ```bash
-curl -X POST "https://qr.example.kr/render" \
+curl -X POST "https://qr.example.kr/api" \
   -H "Content-Type: application/json" \
   -d '{
     "type": "email",
@@ -220,7 +221,7 @@ curl -X POST "https://qr.example.kr/render" \
 ### SMS
 
 ```bash
-curl -X POST "https://qr.example.kr/render" \
+curl -X POST "https://qr.example.kr/api" \
   -H "Content-Type: application/json" \
   -d '{
     "type": "sms",
@@ -232,7 +233,7 @@ curl -X POST "https://qr.example.kr/render" \
 ### vCard
 
 ```bash
-curl -X POST "https://qr.example.kr/render" \
+curl -X POST "https://qr.example.kr/api" \
   -H "Content-Type: application/json" \
   -d '{
     "type": "vcard",
@@ -283,7 +284,7 @@ curl -X POST "https://qr.example.kr/render" \
 ## 흰 QR + 검은 배경 JPG
 
 ```text
-https://qr.example.kr/?type=text&text=hello&format=jpg&fg_r=255&fg_g=255&fg_b=255&bg_r=0&bg_g=0&bg_b=0
+https://qr.example.kr/api?type=text&text=hello&format=jpg&fg_r=255&fg_g=255&fg_b=255&bg_r=0&bg_g=0&bg_b=0
 ```
 
 ## dot 스타일
@@ -322,7 +323,7 @@ https://qr.example.kr/?type=text&text=hello&format=jpg&fg_r=255&fg_g=255&fg_b=25
 ### 공통 파라미터 사용 예시
 
 ```text
-https://qr.example.kr/?type=text&text=hello&style=dot&format=jpg&scale=12&border=2&error_correction=H&version=5&optimize=20&fg_r=255&fg_g=255&fg_b=255&bg_r=0&bg_g=0&bg_b=0&jpg_quality=95&download=1
+https://qr.example.kr/api?type=text&text=hello&style=dot&format=jpg&scale=12&border=2&error_correction=H&version=5&optimize=20&fg_r=255&fg_g=255&fg_b=255&bg_r=0&bg_g=0&bg_b=0&jpg_quality=95&download=1
 ```
 
 ## 타입별 데이터 파라미터
@@ -364,7 +365,7 @@ https://qr.example.kr/?type=text&text=hello&style=dot&format=jpg&scale=12&border
 ## 예시 3: POST
 
 ```bash
-curl -X POST "https://qr.example.kr/render" \
+curl -X POST "https://qr.example.kr/api" \
   -H "Content-Type: application/json" \
   -o qr.png \
   -d '{
@@ -395,7 +396,7 @@ PNG / JPG 변환
 # 🖥️ Web UI
 
 ```text
-https://qr.example.kr/ui
+https://qr.example.kr/
 ```
 
 ### 기능
