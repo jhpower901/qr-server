@@ -4,7 +4,7 @@ from pathlib import Path
 from typing import Any
 
 from fastapi import Body, FastAPI, HTTPException, Query, Request
-from fastapi.responses import HTMLResponse, Response
+from fastapi.responses import HTMLResponse, RedirectResponse, Response
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 
@@ -113,7 +113,7 @@ def health() -> dict[str, str]:
     return {"status": "ok"}
 
 
-@app.get("/ui", response_class=HTMLResponse)
+@app.get("/", response_class=HTMLResponse)
 def qr_ui(request: Request):
     return templates.TemplateResponse(
         request=request,
@@ -122,7 +122,12 @@ def qr_ui(request: Request):
     )
 
 
-@app.get("/")
+@app.get("/ui")
+def qr_ui_redirect():
+    return RedirectResponse(url="/", status_code=301)
+
+
+@app.get("/api")
 def generate_qr_get(
     qr_type: str = Query(
         "text",
@@ -232,7 +237,7 @@ def generate_qr_get(
         raise HTTPException(status_code=500, detail=f"failed to generate qr: {exc}") from exc
 
 
-@app.post("/render")
+@app.post("/api/render")
 def generate_qr_post(
     body: dict[str, Any] = Body(...),
 ):

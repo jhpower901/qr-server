@@ -177,7 +177,7 @@ async function renderQr(download = false) {
   const payload = buildApiPayload();
   payload.download = download;
 
-  const response = await fetch("/render", {
+  const response = await fetch("/api/render", {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -254,7 +254,7 @@ async function copyShareLink() {
   try {
     const state = buildUiState();
     const encoded = serializeUiStateForShare(state);
-    const url = `${window.location.origin}/ui?payload=${encoded}`;
+    const url = `${window.location.origin}/?payload=${encoded}`;
     await navigator.clipboard.writeText(url);
     $("hint").textContent = "현재 UI 상태를 담은 공유 링크를 복사했습니다.";
   } catch (err) {
